@@ -61,7 +61,14 @@
         return [self safeObjectForKey:aKey];
     }
     else {
-        HJLogE(@"如果不是键盘的，那这里objectForKey就有问题啦");
+        NSArray *syms = [NSThread callStackSymbols];
+        if (([syms count] > 1) //以后可能过滤一个列表
+            && (([[syms objectAtIndex:1] rangeOfString:@"UIKeyboard"].length != 0))) {
+            return [self safeObjectForKey:aKey];
+        }
+
+        NSAssert(NO, @"no");
+
         return nil;
     }
 }
