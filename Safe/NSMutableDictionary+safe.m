@@ -8,14 +8,19 @@
 
 #import "NSMutableDictionary+safe.h"
 
-@implementation NSMutableDictionary(safe)
+@implementation NSMutableDictionary (safe)
 
 + (void)load
 {
-    [HJSwizzle overrideMethodByClass:NSClassFromString(@"__NSDictionaryM") origSel:@selector(setObject:forKeyedSubscript:) altSel:@selector(safeSetObject:forKeyedSubscript:)];
-    
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSDictionaryM") origSel:@selector(setObject:forKey:) altSel:@selector(safeSetObject:forKey:)];
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSDictionaryM") origSel:@selector(objectForKey:) altSel:@selector(safeObjectForKey:)];
+    NSArray *classArr = @[ @"__NSDictionaryM", @"__NSCFDictionary" ];
+    [classArr enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+      NSString *classString = (NSString *)obj;
+
+      [HJSwizzle overrideMethodByClass:NSClassFromString(classString) origSel:@selector(setObject:forKeyedSubscript:) altSel:@selector(safeSetObject:forKeyedSubscript:)];
+
+      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(setObject:forKey:) altSel:@selector(safeSetObject:forKey:)];
+      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(objectForKey:) altSel:@selector(safeObjectForKey:)];
+    }];
 }
 
 /**
@@ -28,9 +33,9 @@
 {
     if (!key) {
         NSAssert(NO, @"no");
-        return ;
+        return;
     }
-    
+
     if (!obj) {
         [self removeObjectForKey:key];
     }
@@ -43,7 +48,8 @@
 {
     if (aObj && ![aObj isKindOfClass:[NSNull class]] && aKey) {
         [self safeSetObject:aObj forKey:aKey];
-    } else {
+    }
+    else {
         NSAssert(NO, @"no");
         return;
     }
@@ -53,8 +59,9 @@
 {
     if (aKey != nil) {
         return [self safeObjectForKey:aKey];
-    } else {
-        NSAssert(NO, @"no");
+    }
+    else {
+        HJLogE(@"如果不是键盘的，那这里objectForKey就有问题啦");
         return nil;
     }
 }
