@@ -64,7 +64,8 @@
         NSArray *syms = [NSThread callStackSymbols];
         if (([syms count] > 1) //以后可能过滤一个列表
             && (([[syms objectAtIndex:1] rangeOfString:@"UIKeyboard"].length != 0)
-                ||([[syms objectAtIndex:1] rangeOfString:@"UIKeyboardInputMode"].length != 0))) {
+                ||([[syms objectAtIndex:1] rangeOfString:@"UIKeyboardInputMode"].length != 0)
+                ||([[syms objectAtIndex:1] rangeOfString:@"TIGetDefaultInputModesForLanguage"].length != 0))) {
                 return [self safeObjectForKey:aKey];
             }
         
