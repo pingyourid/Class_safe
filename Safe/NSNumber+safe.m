@@ -12,29 +12,30 @@
 
 + (void)load
 {
-    [HJSwizzle exchangeMethodByClass:[self class] origSel:@selector(isEqualToNumber:) altSel:@selector(safeIsEqualToNumber:)];
-    [HJSwizzle exchangeMethodByClass:[self class] origSel:@selector(compare:) altSel:@selector(safeCompare:)];    
+    [HJSwizzle exchangeMethodByClass:[self class] origSel:@selector(isEqualToNumber:) altSel:@selector(hjsafeIsEqualToNumber:)];
+    [HJSwizzle exchangeMethodByClass:[self class] origSel:@selector(compare:) altSel:@selector(hjsafeCompare:)];    
 }
 
-- (BOOL)safeIsEqualToNumber:(NSNumber *)number
+
+- (BOOL)hjsafeIsEqualToNumber:(NSNumber *)number
 {
     if (number == nil) {
         NSAssert(NO, @"no");
         return NO;
     }
     else {
-        return [self safeIsEqualToNumber:number];
+        return [self hjsafeIsEqualToNumber:number];
     }
 }
 
-- (NSComparisonResult)safeCompare:(NSNumber *)otherNumber
+- (NSComparisonResult)hjsafeCompare:(NSNumber *)otherNumber
 {
     if (otherNumber == nil) {
         NSAssert(NO, @"no");
         return NSOrderedDescending;
     }
     else {
-        return [self safeCompare:otherNumber];
+        return [self hjsafeCompare:otherNumber];
     }
 }
 

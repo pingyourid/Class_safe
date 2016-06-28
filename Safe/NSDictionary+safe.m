@@ -13,30 +13,61 @@
 
 + (void)load
 {
-    [HJSwizzle overrideMethodByClass:[self class] origSel:@selector(objectForKeyedSubscript:) altSel:@selector(safeObjectForKeyedSubscript:)];
-
-    [HJSwizzle exchangeClassMethodByClass:[self class] origClassSel:@selector(dictionaryWithObject:forKey:) altClassSel:@selector(safeDictionaryWithObject:forKey:)];
+    NSArray *classArr = @[ @"__NSDictionary0", @"__NSDictionaryM", @"__NSCFDictionary" ];
+    [classArr enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        NSString *classString = (NSString *) obj;
+        [HJSwizzle overrideMethodByClass:NSClassFromString(classString) origSel:@selector(objectForKeyedSubscript:) altSel:@selector(hjsafeObjectForKeyedSubscript:)];
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(dictionaryWithObject:forKey:) altSel:@selector(hjsafeDictionaryWithObject:forKey:)];
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(objectForKey:) altSel:@selector(hjsafeObjectForKey:)];
+    }];
 }
 
-- (id)safeObjectForKeyedSubscript:(id<NSCopying>)key
+- (id)hjsafeObjectForKeyedSubscript:(id<NSCopying>)key
 {
     if (key == nil) {
-        NSAssert(NO, @"can't be nil");
-        return nil;
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            NSAssert(NO, @"can't be nil");
+            return nil;
+        }
+        else {
+            return [self hjsafeObjectForKey:key];
+        }
     }
     else {
-        return [self objectForKey:key];
+        return [self hjsafeObjectForKey:key];
     }
 }
 
-+ (id)safeDictionaryWithObject:(id)object forKey:(id<NSCopying>)key
+- (id)hjsafeObjectForKey:(id<NSCopying>)aKey
+{
+    if (!aKey) {
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            NSAssert(NO, @"no");
+            return nil;
+        }
+        else {
+            return [self hjsafeObjectForKey:aKey];
+        }
+    }
+    else
+    {
+        return [self hjsafeObjectForKey:aKey];
+    }
+}
+
++ (id)hjsafeDictionaryWithObject:(id)object forKey:(id<NSCopying>)key
 {
     if (object == nil || key == nil) {
-        NSAssert(NO, @"can't be nil");
-        return [self dictionary];
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            NSAssert(NO, @"can't be nil");
+            return [self dictionary];
+        }
+        else {
+            return [self hjsafeDictionaryWithObject:object forKey:key];
+        }
     }
     else {
-        return [self safeDictionaryWithObject:object forKey:key];
+        return [self hjsafeDictionaryWithObject:object forKey:key];
     }
 }
 

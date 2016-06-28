@@ -16,12 +16,12 @@
     [classArr enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
       NSString *classString = (NSString *)obj;
 
-      [HJSwizzle overrideMethodByClass:NSClassFromString(classString) origSel:@selector(setObject:forKeyedSubscript:) altSel:@selector(safeSetObject:forKeyedSubscript:)];
+      [HJSwizzle overrideMethodByClass:NSClassFromString(classString) origSel:@selector(setObject:forKeyedSubscript:) altSel:@selector(hjsafeSetObject:forKeyedSubscript:)];
 
-      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(setObject:forKey:) altSel:@selector(safeSetObject:forKey:)];
-      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(objectForKey:) altSel:@selector(safeObjectForKey:)];
+      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(setObject:forKey:) altSel:@selector(hjsafeSetObject:forKey:)];
     }];
 }
+
 
 /**
  *  dic[]的安全
@@ -29,50 +29,44 @@
  *  @param obj
  *  @param key 
  */
-- (void)safeSetObject:(id)obj forKeyedSubscript:(id<NSCopying>)key
+- (void)hjsafeSetObject:(id)obj forKeyedSubscript:(id<NSCopying>)key
 {
-    if (!key) {
-        NSAssert(NO, @"no");
-        return;
-    }
-
-    if (!obj) {
-        [self removeObjectForKey:key];
+    if (!key || !obj) {
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            NSAssert(NO, @"no");
+            if (!key) {
+                return;
+            }
+            if (!obj) {
+                [self removeObjectForKey:key];
+            }
+        }
+        else
+        {
+            [self hjsafeSetObject:obj forKey:key];
+        }
     }
     else {
-        [self setObject:obj forKey:key];
+        [self hjsafeSetObject:obj forKey:key];
     }
 }
 
-- (void)safeSetObject:(id)aObj forKey:(id<NSCopying>)aKey
+- (void)hjsafeSetObject:(id)aObj forKey:(id<NSCopying>)aKey
 {
     if (aObj && ![aObj isKindOfClass:[NSNull class]] && aKey) {
-        [self safeSetObject:aObj forKey:aKey];
+        [self hjsafeSetObject:aObj forKey:aKey];
     }
     else {
-        NSAssert(NO, @"no");
-        return;
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            NSAssert(NO, @"no");
+            return;
+        }
+        else
+        {
+            return [self hjsafeSetObject:aObj forKey:aKey];
+        }
     }
 }
 
-- (id)safeObjectForKey:(id<NSCopying>)aKey
-{
-    if (aKey != nil) {
-        return [self safeObjectForKey:aKey];
-    }
-    else {
-        NSArray *syms = [NSThread callStackSymbols];
-        if (([syms count] > 1) //以后可能过滤一个列表
-            && (([[syms objectAtIndex:1] rangeOfString:@"UIKeyboard"].length != 0)
-                ||([[syms objectAtIndex:1] rangeOfString:@"UIKeyboardInputMode"].length != 0)
-                ||([[syms objectAtIndex:1] rangeOfString:@"TIGetDefaultInputModesForLanguage"].length != 0))) {
-                return [self safeObjectForKey:aKey];
-            }
-        
-        NSAssert(NO, @"no");
-        
-        return nil;
-    }
-}
 
 @end

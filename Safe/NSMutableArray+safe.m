@@ -13,102 +13,93 @@
 
 + (void)load
 {
-    NSArray *classArr = @[ @"__NSArrayM", @"__NSCFArray" ];
+    NSArray *classArr = @[@"__NSArrayM",@"__NSCFArray"];
     [classArr enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-      NSString *classString = (NSString *)obj;
-
-      [HJSwizzle overrideMethodByClass:NSClassFromString(classString) origSel:@selector(setObject:atIndexedSubscript:) altSel:@selector(safeSetObject:atIndexedSubscript:)];
-
-      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(addObject:) altSel:@selector(safeAddObject:)];
-      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(insertObject:atIndex:) altSel:@selector(safeInsertObject:atIndex:)];
-      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(insertObjects:atIndexes:) altSel:@selector(safeInsertObjects:atIndexes:)];
-      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(removeObjectAtIndex:) altSel:@selector(safeRemoveObjectAtIndex:)];
-      [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(removeObjectsInRange:) altSel:@selector(safeRemoveObjectsInRange:)];
+        NSString *classString = (NSString *)obj;
+        
+        [HJSwizzle overrideMethodByClass:NSClassFromString(classString) origSel:@selector(setObject:atIndexedSubscript:) altSel:@selector(hjsafeSetObject:atIndexedSubscript:)];
+        
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(addObject:) altSel:@selector(hjsafeAddObject:)];
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(insertObject:atIndex:) altSel:@selector(hjsafeInsertObject:atIndex:)];
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(insertObjects:atIndexes:) altSel:@selector(hjsafeInsertObjects:atIndexes:)];
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(removeObjectAtIndex:) altSel:@selector(hjsafeRemoveObjectAtIndex:)];
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(removeObjectsInRange:) altSel:@selector(hjsafeRemoveObjectsInRange:)];
     }];
 }
 
-- (void)safeSetObject:(id)obj atIndexedSubscript:(NSUInteger)idx
-{
+- (void)hjsafeSetObject:(id)obj atIndexedSubscript:(NSUInteger)idx{
     if (obj == nil) {
-        return;
+        return ;
     }
-
+    
     if (self.count < idx) {
         NSAssert(NO, @"no");
-        return;
+        return ;
     }
-
+    
     if (idx == self.count) {
         [self addObject:obj];
-    }
-    else {
+    } else {
         [self replaceObjectAtIndex:idx withObject:obj];
     }
 }
 
-- (void)safeAddObject:(id)object
+- (void)hjsafeAddObject:(id)object
 {
-    if (object == nil) {
+	if (object == nil) {
         NSAssert(NO, @"no");
-        return;
-    }
-    else {
-        [self safeAddObject:object];
+		return;
+	} else {
+        [self hjsafeAddObject:object];
     }
 }
 
-- (void)safeInsertObject:(id)object atIndex:(NSUInteger)index
+- (void)hjsafeInsertObject:(id)object atIndex:(NSUInteger)index
 {
-    if (object == nil) {
+	if (object == nil) {
         NSAssert(NO, @"no");
-        return;
-    }
-    else if (index > self.count) {
+		return;
+	} else if (index > self.count) {
         NSAssert(NO, @"no");
-        return;
-    }
-    else {
-        [self safeInsertObject:object atIndex:index];
+		return;
+	} else {
+        [self hjsafeInsertObject:object atIndex:index];
     }
 }
 
-- (void)safeInsertObjects:(NSArray *)objects atIndexes:(NSIndexSet *)indexs
+- (void)hjsafeInsertObjects:(NSArray *)objects atIndexes:(NSIndexSet *)indexs
 {
     NSUInteger firstIndex = indexs.firstIndex;
     if (indexs == nil) {
         NSAssert(NO, @"no");
         return;
-    }
-    else if (indexs.count != objects.count || firstIndex > objects.count) {
+    } else if (indexs.count!=objects.count || firstIndex>objects.count) {
         NSAssert(NO, @"no");
         return;
-    }
-    else {
-        [self safeInsertObjects:objects atIndexes:indexs];
+    } else {
+        [self hjsafeInsertObjects:objects atIndexes:indexs];
     }
 }
 
-- (void)safeRemoveObjectAtIndex:(NSUInteger)index
+- (void)hjsafeRemoveObjectAtIndex:(NSUInteger)index
 {
-    if (index >= self.count) {
+	if (index >= self.count) {
         NSAssert(NO, @"no");
-        return;
-    }
-    else {
-        [self safeRemoveObjectAtIndex:index];
+		return;
+	} else {
+        [self hjsafeRemoveObjectAtIndex:index];
     }
 }
 
-- (void)safeRemoveObjectsInRange:(NSRange)range
+- (void)hjsafeRemoveObjectsInRange:(NSRange)range
 {
     NSUInteger location = range.location;
     NSUInteger length = range.length;
     if (location + length > self.count) {
         NSAssert(NO, @"no");
         return;
-    }
-    else {
-        [self safeRemoveObjectsInRange:range];
+    } else {
+        [self hjsafeRemoveObjectsInRange:range];
     }
 }
 

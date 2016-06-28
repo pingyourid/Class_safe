@@ -12,61 +12,89 @@
 
 + (void)load
 {
-    [HJSwizzle overrideMethodByClass:NSClassFromString(@"__NSArrayI") origSel:@selector(objectAtIndexedSubscript:) altSel:@selector(safeObjectAtIndexedSubscript:)];    
-   
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSArrayI") origSel:@selector(objectAtIndex:) altSel:@selector(safeObjectAtIndex:)];
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSArrayI") origSel:@selector(subarrayWithRange:) altSel:@selector(safeSubarrayWithRange:)];
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSArrayI") origSel:@selector(indexOfObject:) altSel:@selector(safeIndexOfObject:)];
+    NSArray *classArr = @[@"__NSArrayM",@"__NSCFArray",@"__NSArrayI",@"__NSArray0"];
+    [classArr enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        NSString *classString = (NSString *)obj;
+        
+        [HJSwizzle overrideMethodByClass:NSClassFromString(classString) origSel:@selector(objectAtIndexedSubscript:) altSel:@selector(hjsafeObjectAtIndexedSubscript:)];
+        
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(objectAtIndex:) altSel:@selector(hjsafeObjectAtIndex:)];
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(subarrayWithRange:) altSel:@selector(hjsafeSubarrayWithRange:)];
+        [HJSwizzle exchangeMethodByClass:NSClassFromString(classString) origSel:@selector(indexOfObject:) altSel:@selector(hjsafeIndexOfObject:)];
+    }];
 }
 
-- (id)safeObjectAtIndexedSubscript:(NSUInteger)index
+- (id)hjsafeObjectAtIndexedSubscript:(NSUInteger)index
 {
     if (index >= self.count) {
-        return nil;
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            NSAssert(NO, @"can't be nil");
+            return nil;
+        }
+        else
+        {
+            return [self hjsafeObjectAtIndex:index];
+        }
     }
     else {
-        return [self objectAtIndex:index];
+        return [self hjsafeObjectAtIndex:index];
     }
 }
 
-- (id)safeObjectAtIndex:(NSUInteger)index
+- (id)hjsafeObjectAtIndex:(NSUInteger)index
 {
     if (index >= self.count) {
-        NSAssert(NO, @"index beyond");
-        return nil;
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            NSAssert(NO, @"index beyond");
+            return nil;
+        }
+        else
+        {
+            return [self hjsafeObjectAtIndex:index];
+        }
     }
     else {
-        return [self safeObjectAtIndex:index];
+        return [self hjsafeObjectAtIndex:index];
     }
 }
 
-- (NSArray *)safeSubarrayWithRange:(NSRange)range
+- (NSArray *)hjsafeSubarrayWithRange:(NSRange)range
 {
     NSUInteger location = range.location;
     NSUInteger length = range.length;
     if (location + length > self.count) {
-        //超过了边界,就获取从loction开始所有的item
-        NSAssert(NO, @"index beyond");
-        if ((location + length) > self.count) {
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            //超过了边界,就获取从loction开始所有的item
+            NSAssert(NO, @"index beyond");
             length = (self.count - location);
-            return [self safeSubarrayWithRange:NSMakeRange(location, length)];
+            return [self hjsafeSubarrayWithRange:NSMakeRange(location, length)];
         }
-
-        return nil;
+        else
+        {
+            return [self hjsafeSubarrayWithRange:range];
+        }
+        
+        
     }
     else {
-        return [self safeSubarrayWithRange:range];
+        return [self hjsafeSubarrayWithRange:range];
     }
 }
 
-- (NSUInteger)safeIndexOfObject:(id)anObject
+- (NSUInteger)hjsafeIndexOfObject:(id)anObject
 {
     if (anObject == nil) {
-        NSAssert(NO, @"anObject can't be nil");
-        return NSNotFound;
+        if ([HJSafeFilter shouldThrowExceptionWithSymbolArray:[NSThread callStackSymbols]]) {
+            NSAssert(NO, @"no");
+            return NSNotFound;
+        }
+        else
+        {
+            return [self hjsafeIndexOfObject:anObject];
+        }
     }
     else {
-        return [self safeIndexOfObject:anObject];
+        return [self hjsafeIndexOfObject:anObject];
     }
 }
 

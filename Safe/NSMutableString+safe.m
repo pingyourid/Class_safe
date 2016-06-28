@@ -12,13 +12,13 @@
 
 + (void)load
 {
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSCFString") origSel:@selector(insertString:atIndex:) altSel:@selector(safeInsertString:atIndex:)];
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSCFString") origSel:@selector(appendString:) altSel:@selector(safeAppendString:)];
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSCFString") origSel:@selector(setString:) altSel:@selector(safeSetString:)];
-    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSCFString") origSel:@selector(replaceOccurrencesOfString:withString:options:range:) altSel:@selector(safeReplaceOccurrencesOfString:withString:options:range:)];
+    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSCFString") origSel:@selector(insertString:atIndex:) altSel:@selector(hjsafeInsertString:atIndex:)];
+    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSCFString") origSel:@selector(appendString:) altSel:@selector(hjsafeAppendString:)];
+    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSCFString") origSel:@selector(setString:) altSel:@selector(hjsafeSetString:)];
+    [HJSwizzle exchangeMethodByClass:NSClassFromString(@"__NSCFString") origSel:@selector(replaceOccurrencesOfString:withString:options:range:) altSel:@selector(hjsafeReplaceOccurrencesOfString:withString:options:range:)];
 }
 
-- (void)safeInsertString:(NSString *)aString atIndex:(NSUInteger)loc
+- (void)hjsafeInsertString:(NSString *)aString atIndex:(NSUInteger)loc
 {
     if (aString == nil) {
         NSAssert(NO, @"no");
@@ -27,31 +27,31 @@
         NSAssert(NO, @"no");
         return;
     } else {
-        [self safeInsertString:aString atIndex:loc];
+        [self hjsafeInsertString:aString atIndex:loc];
     }
 }
 
-- (void)safeAppendString:(NSString *)aString
+- (void)hjsafeAppendString:(NSString *)aString
 {
     if (aString == nil) {
         NSAssert(NO, @"no");
         return;
     } else {
-        [self safeAppendString:aString];
+        [self hjsafeAppendString:aString];
     }
 }
 
-- (void)safeSetString:(NSString *)aString
+- (void)hjsafeSetString:(NSString *)aString
 {
     if (aString == nil) {
         NSAssert(NO, @"no");
         return;
     } else {
-        [self safeSetString:aString];
+        [self hjsafeSetString:aString];
     }
 }
 
-- (NSUInteger)safeReplaceOccurrencesOfString:(NSString *)target withString:(NSString *)replacement options:(NSStringCompareOptions)options range:(NSRange)searchRange
+- (NSUInteger)hjsafeReplaceOccurrencesOfString:(NSString *)target withString:(NSString *)replacement options:(NSStringCompareOptions)options range:(NSRange)searchRange
 {
     NSUInteger location = searchRange.location;
     NSUInteger length = searchRange.length;
@@ -63,7 +63,7 @@
         NSAssert(NO, @"no");
         return 0;
     } else {
-        return [self safeReplaceOccurrencesOfString:target withString:replacement options:options range:searchRange];
+        return [self hjsafeReplaceOccurrencesOfString:target withString:replacement options:options range:searchRange];
     }
 }
 
